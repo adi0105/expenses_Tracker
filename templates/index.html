@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expenses Tracker</title>
+    <style>
+        body {
+            display: flex;
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+        .container{
+            flex: 1;
+            width: 100%;
+            max-height: 100vh;
+            max-width: 600px;
+            margin: 150px auto;
+            padding:20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);    
+
+        }
+        h1 {
+            text-align: center;
+            margin-top: 50px;
+        }
+        form {
+            text-align: center;
+            margin-top: 50px;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: none;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        button[type="submit"] {
+            margin-top:20px ;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;    
+        }
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 50px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+        }
+        li {
+            margin: 10px 0; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+    <h1>Expenses Tracker</h1>
+
+    <form action="{{ url_for('addExpenses') }}" method="POST">
+        <input type="text" name="name" placeholder="Expense Name" required>
+        <input type="text" name="category" placeholder="Category" required>
+        <input type="number" name="amount" placeholder="Amount" required>
+        <button type="submit">Add Expense</button>
+    </form>
+
+    <h2>Total Expense: {{ total }}</h2>
+
+    <ul>
+        {% for expense in expenses %}
+            <li>{{ expense[1] }} - {{ expense[2] }}: ${{ expense[3] }}</li>
+        {% endfor %}
+    </ul>
+</div>
+</body>
+</html>
