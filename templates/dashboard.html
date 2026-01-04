@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Expense Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside id="mainNav" class="sidebar" role="navigation" aria-label="Main navigation">
+            <div class="sidebar-header">
+                <h2>💰 Expense Tracker</h2>
+                <p>AI-Powered Finance</p>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active" data-section="overview">
+                    <span>📊</span> Overview
+                </a>
+                <a href="#" class="nav-link" data-section="transactions">
+                    <span>📱</span> Messages
+                </a>
+                <a href="#" class="nav-link" data-section="expenses">
+                    <span>💸</span> Expenses
+                </a>
+                <a href="#" class="nav-link" data-section="income">
+                    <span>💵</span> Income
+                </a>
+                <a href="#" class="nav-link" data-section="insights">
+                    <span>🤖</span> AI Insights
+                </a>
+                <a href="#" class="nav-link" data-section="analytics">
+                    <span>📈</span> Analytics
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="logoutBtn" class="btn btn-logout">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="main-content" role="main" aria-labelledby="sectionTitle">
+            <!-- Header -->
+            <header class="top-header" role="banner">
+                <div class="header-left">
+                    <button id="sidebarToggle" class="btn btn-secondary" aria-controls="mainNav" aria-expanded="true" aria-label="Toggle navigation">☰</button>
+                    <h1 id="sectionTitle">Overview</h1>
+                    <p id="sectionSubtitle">Welcome back, {{ username }}!</p>
+                </div>
+                <div class="header-right">
+                    <a href="/settings" class="btn btn-settings" title="Settings">⚙️ Settings</a>
+                    <button class="btn btn-user" id="userMenuBtn" aria-haspopup="true" aria-controls="userMenu">👤</button>
+                    <span class="user-info" aria-hidden="true">👤 {{ username }}</span>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Overview Section -->
+                <section id="overview" class="section active">
+                    <!-- Summary Cards -->
+                    <div class="summary-cards" role="region" aria-label="Summary cards">
+                        <div class="card income-card">
+                            <div class="card-header">Total Income</div>
+                            <div class="card-amount" id="totalIncome" aria-live="polite"><span data-amount="0">0.00</span></div>
+                            <div class="card-subtext" id="incomeCount">0 sources</div>
+                        </div>
+
+                        <div class="card expense-card">
+                            <div class="card-header">Total Expenses</div>
+                            <div class="card-amount" id="totalExpenses" aria-live="polite"><span data-amount="0">0.00</span></div>
+                            <div class="card-subtext" id="expenseCount">0 transactions</div>
+                        </div>
+
+                        <div class="card savings-card">
+                            <div class="card-header">Savings</div>
+                            <div class="card-amount" id="totalSavings" aria-live="polite"><span data-amount="0">0.00</span></div>
+                            <div class="card-subtext" id="savingsPercent">0%</div>
+                        </div>
+                    </div>
+
+                    <!-- Month Selector -->
+                    <div class="month-selector">
+                        <label for="monthSelect">Select Month:</label>
+                        <select id="monthSelect">
+                            <option value="">Current Month</option>
+                        </select>
+                    </div>
+
+                    <!-- Expense Categories Chart -->
+                    <div class="card full-width">
+                        <div class="card-header">Expense Breakdown by Category</div>
+                        <div class="chart-container">
+                            <canvas id="categoryChart" role="img" aria-label="Expense breakdown by category"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Transactions Section (Auto-Detected Messages) -->
+                <section id="transactions" class="section">
+                    <div class="section-header">
+                        <h2>Transaction Messages</h2>
+                        <div class="header-stats">
+                            <span class="balance-display">💳 Current Balance: <strong id="currentBalance" aria-live="polite"><span data-amount="0">0.00</span></strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Upload Transaction Message Form -->
+                    <div class="card full-width form-card">
+                        <h3>📱 Paste Transaction Alert Message</h3>
+                        <p class="info-text">Paste SMS, email, or bank notification messages to auto-detect transactions</p>
+                        <form id="transactionMessageForm" aria-labelledby="transactionMessageLabel">
+                            <div class="form-group">
+                                <label id="transactionMessageLabel" for="transactionMessage">Transaction Message</label>
+                                <textarea id="transactionMessage" required placeholder="Paste your transaction alert message here... Example: ₹2,500 debited from your account via UPI at Amazon" rows="4"></textarea>
+                                <div class="help-text">💡 Examples: Bank SMS alerts, UPI notifications, card statements</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-large">🔍 Process Message</button>
+                        </form>
+                    </div>
+
+                    <!-- Processing Status -->
+                    <div id="processingStatus" class="status-message hidden" role="status" aria-live="polite"></div>
+
+                    <!-- Auto-Detected Transactions List -->
+                    <div class="card full-width">
+                        <h3>🔄 Auto-Detected Transactions</h3>
+                        <div id="autoTransactionsList" class="transactions-list" aria-live="polite">
+                            <p class="empty-state">No auto-detected transactions yet. Start by pasting a transaction message above.</p>
+                        </div>
+                    </div>
+
+                    <!-- Balance Summary Card -->
+                    <div class="card balance-summary">
+                        <h3>Balance Summary</h3>
+                        <div class="balance-grid">
+                            <div class="balance-item">
+                                <div class="balance-label">💰 Current Balance</div>
+                                <div class="balance-value" id="balanceAmount" aria-live="polite"><span data-amount="0">0.00</span></div>
+                            </div>
+                            <div class="balance-item">
+                                <div class="balance-label">➕ Total Credits</div>
+                                <div class="balance-value credits" id="totalCredits"><span data-amount="0">0.00</span></div>
+                            </div>
+                            <div class="balance-item">
+                                <div class="balance-label">➖ Total Debits</div>
+                                <div class="balance-value debits" id="totalDebits"><span data-amount="0">0.00</span></div>
+                            </div>
+                            <div class="balance-item">
+                                <div class="balance-label">📊 Net Flow</div>
+                                <div class="balance-value" id="netFlow"><span data-amount="0">0.00</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Card -->
+                    <div class="card stats-summary">
+                        <h3>📈 Transaction Statistics (This Month)</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">🤖 Auto-Detected</div>
+                                <div class="stat-value" id="autoCount" aria-live="polite">0</div>
+                                <div class="stat-amount" id="autoAmount" aria-live="polite"><span data-amount="0">0.00</span></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">✋ Manual Entries</div>
+                                <div class="stat-value" id="manualCount">0</div>
+                                <div class="stat-amount" id="manualAmount"><span data-amount="0">0.00</span></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">📊 Total Expenses</div>
+                                <div class="stat-value" id="totalExpensesStats"><span data-amount="0">0.00</span></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">💵 Total Income</div>
+                                <div class="stat-value" id="totalIncomeStats"><span data-amount="0">0.00</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Expenses Section -->
+                <section id="expenses" class="section">
+                    <div class="section-header">
+                        <h2>Manage Expenses</h2>
+                        <button id="addExpenseBtn" class="btn btn-primary">+ Add Expense</button>
+                    </div>
+
+                    <!-- Add Expense Form -->
+                    <div id="expenseForm" class="form-card hidden">
+                        <h3>Add New Expense</h3>
+                        <form id="expenseSubmitForm">
+                            <div class="form-group">
+                                <label for="expenseAmount">Amount</label>
+                                <input type="number" id="expenseAmount" step="0.01" required 
+                                       placeholder="0.00">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="expenseDescription">Description</label>
+                                <input type="text" id="expenseDescription" required 
+                                       placeholder="What did you spend on?">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="expenseCategory">Category</label>
+                                <div class="category-select">
+                                    <select id="expenseCategory" required>
+                                        <option value="">Select Category</option>
+                                        <option value="Food">🍔 Food</option>
+                                        <option value="Travel">✈️ Travel</option>
+                                        <option value="Shopping">🛍️ Shopping</option>
+                                        <option value="Bills">📄 Bills</option>
+                                        <option value="Entertainment">🎬 Entertainment</option>
+                                        <option value="Health">🏥 Health</option>
+                                        <option value="Other">📌 Other</option>
+                                    </select>
+                                    <button type="button" id="aiClassifyBtn" class="btn btn-small">🤖 Auto-Classify</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="expenseDate">Date</label>
+                                <input type="date" id="expenseDate" required>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Add Expense</button>
+                                <button type="button" class="btn btn-secondary" onclick="toggleForm('expenseForm')">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Expenses List -->
+                    <div class="card full-width">
+                        <div class="card-header">Your Expenses</div>
+                        <div id="expensesList" class="transactions-list" aria-live="polite">
+                            <p class="empty-state">No expenses yet. Add one to get started!</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Income Section -->
+                <section id="income" class="section">
+                    <div class="section-header">
+                        <h2>Manage Income</h2>
+                        <button id="addIncomeBtn" class="btn btn-primary">+ Add Income</button>
+                    </div>
+
+                    <!-- Add Income Form -->
+                    <div id="incomeForm" class="form-card hidden">
+                        <h3>Add Income Source</h3>
+                        <form id="incomeSubmitForm">
+                            <div class="form-group">
+                                <label for="incomeAmount">Amount</label>
+                                <input type="number" id="incomeAmount" step="0.01" required 
+                                       placeholder="0.00">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="incomeSource">Source</label>
+                                <input type="text" id="incomeSource" required 
+                                       placeholder="e.g., Salary, Freelance, Investment">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="incomeDate">Date</label>
+                                <input type="date" id="incomeDate" required>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Add Income</button>
+                                <button type="button" class="btn btn-secondary" onclick="toggleForm('incomeForm')">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Income List -->
+                    <div class="card full-width">
+                        <div class="card-header">Your Income Sources</div>
+                        <div id="incomeList" class="transactions-list">
+                            <p class="empty-state">No income recorded yet.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- AI Insights Section -->
+                <section id="insights" class="section">
+                    <div class="section-header">
+                        <h2>AI Financial Insights</h2>
+                        <button id="generateInsightsBtn" class="btn btn-primary">🤖 Generate Insights</button>
+                    </div>
+
+                    <div id="insightsContainer" class="card full-width">
+                        <div class="insights-placeholder">
+                            <p>Select a month and click "Generate Insights" to get AI-powered financial analysis</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Analytics Section -->
+                <section id="analytics" class="section">
+                    <div class="section-header">
+                        <h2>Financial Analytics</h2>
+                    </div>
+
+                    <div class="analytics-grid">
+                        <div class="card">
+                            <div class="card-header">Monthly Trend</div>
+                            <div class="chart-container">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">Income vs Expenses</div>
+                            <div class="chart-container">
+                                <canvas id="comparisonChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/currency.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/transactions.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
